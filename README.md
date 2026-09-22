@@ -2,6 +2,9 @@
 
 ### *Communication without barriers.*
 
+> 🌐 **Live Public Web Application:** **[https://bhargav4221.github.io/signedge/](https://bhargav4221.github.io/signedge/)**  
+> *Fully functional on modern smartphones (Android & iOS), tablets, and desktop browsers with offline PWA support.*
+
 SignEdge is an **offline-first, privacy-focused, mobile-first communication platform** designed to bridge communication between supported sign-language users and spoken/written language speakers using on-device edge AI.
 
 ---
@@ -472,7 +475,7 @@ SignEdge’s value lies in its **specific combination of documented product char
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/signedge/signedge.git
+git clone https://github.com/Bhargav4221/signedge.git
 
 # 2. Enter project directory
 cd signedge
