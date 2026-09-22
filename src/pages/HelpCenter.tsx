@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
 import { 
   HelpCircle, 
   Sun, 
@@ -8,10 +9,12 @@ import {
   ChevronDown, 
   ChevronUp, 
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  ChevronLeft
 } from 'lucide-react';
 
 export const HelpCenter: React.FC = () => {
+  const { goBack } = useApp();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const tips = [
@@ -63,16 +66,28 @@ export const HelpCenter: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="pb-2 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-300">
-            <HelpCircle className="w-5 h-5" />
-          </span>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Help & Framing Guide</h1>
+      <div className="flex items-center justify-between pb-2 border-b border-obsidian-800">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-xl bg-obsidian-900 hover:bg-obsidian-800 text-slate-400 hover:text-white border border-obsidian-800 transition-colors"
+            title="Go back"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300">
+                <HelpCircle className="w-5 h-5" />
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Help & Framing Guide</h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Practical advice for optimal camera recognition, microphone setup, and frequent questions.
+            </p>
+          </div>
         </div>
-        <p className="text-xs text-slate-400 mt-1">
-          Practical advice for optimal camera recognition, microphone setup, and frequent questions.
-        </p>
       </div>
 
       {/* Practical Tips Grid */}

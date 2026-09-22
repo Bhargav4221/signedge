@@ -194,8 +194,13 @@ CAMERA FRAME / AUDIO STREAM
 
 ## 7. AI & Machine Learning Pipeline
 
-### Computer Vision
+### Computer Vision & Real-Time Hand Detection
 The video feed is captured via `CameraPreview.tsx` using `getUserMedia`. Frames are rendered to an offscreen canvas at adaptive resolutions tuned to the detected device hardware tier (320x240 on Low Tier, 480x360 on Medium Tier, 640x480 on High Tier).
+
+To ensure non-demo, authentic behavior and prevent false-positive recognition before a user acts:
+- **Skin Chrominance Segmentation (YCbCr)**: The detector analyzes pixel blocks using standardized skin chrominance bounds ($77 \le Cb \le 127$ and $133 \le Cr \le 173$).
+- **Pixel Density Guardrail**: A minimum active skin pixel threshold (over 120 skin pixels across sampled points) is strictly enforced. If no hand is in the camera signing box, `handDetected: false` is returned immediately.
+- **Centroid & Dynamic Bounding**: Extracts real-time hand centroid coordinates $(\bar{x}, \bar{y})$ and calculates bounding spread. No synthetic keypoints are injected when hands are outside the active signing zone.
 
 ### Landmark Extraction
 `LandmarkDetector.ts` extracts 21 keypoints per hand and upper-body reference points:
@@ -203,10 +208,13 @@ The video feed is captured via `CameraPreview.tsx` using `getUserMedia`. Frames 
 - **Palm Scale Normalization**: Euclidean distance between Point 0 (Wrist) and Point 9 (Middle MCP knuckle) ensures hand size invariance regardless of distance from the camera.
 - **Finger Extension Bitmask**: Calculates whether fingertip distance from the wrist exceeds the PIP knuckle distance to determine whether each finger is curled or extended.
 
-### Temporal Modeling
+### Temporal Modeling & Stability Guardrails
 > [!IMPORTANT]
 > **Why MediaPipe/Landmarks alone are not a sign language translator:**
 > Sign languages are dynamic linguistic systems. Static handshapes cannot differentiate between a salute, an open wave, or a resting hand. SignEdge implements `TemporalSignModel.ts`, maintaining a sliding window of historical frames to calculate trajectory displacement, lateral oscillation frequency, and inter-hand contact over time.
+
+- **Idle / Resting Hand Suppression**: Static hands resting in front of the camera with negligible displacement ($\Delta x < 0.04$, $\Delta y < 0.04$) and without oscillation return `null` and do not emit false-positive signs.
+- **Hysteresis Stability Filter**: Raised to $\ge 4$ consecutive evaluations before emitting a recognized sign gloss, guaranteeing intentional, articulated movement.
 
 ### Sign Recognition
 Matches the dynamic feature signature against canonical vocabulary templates:
@@ -230,9 +238,10 @@ Matches the dynamic feature signature against canonical vocabulary templates:
 ## 8. Technology Stack
 
 - **Frontend & App Framework**: React 18, TypeScript (strict mode), Vite 5.
-- **Styling & Accessibility**: Tailwind CSS with custom WCAG AAA high-contrast colors (`#000000` bg, `#00e5ff` cyan, `#ffffff` text).
+- **URL Hash Routing & History Navigation**: Synchronized hash routing (`#/communication`, `#/home`, etc.) with `popstate` handlers and dedicated header back buttons across all 15 screens, preventing accidental page/app exits.
+- **Styling & Accessibility**: Modern Obsidian Midnight palette (`#070a12`, `#0b0f19`, `#141e33`) with Electric Indigo (`#4f46e5`, `#6366f1`), Cyan, and Emerald accents; WCAG 2.1 AAA high-contrast toggle.
 - **Icons**: Lucide React.
-- **Computer Vision & Inference**: HTML5 Canvas, modular `LandmarkDetector`, and `TemporalSignModel` sliding buffer.
+- **Computer Vision & Inference**: HTML5 Canvas with YCbCr chrominance segmentation, modular `LandmarkDetector`, and `TemporalSignModel` sliding buffer.
 - **Speech Technologies**: W3C Web Speech API (`SpeechSynthesis` for TTS, `SpeechRecognition` for STT).
 - **Local Persistence**: Client-side IndexedDB (`signedge_local_db`) with export capabilities.
 - **Automated Testing**: Vitest 2.1 test suite covering temporal classification, language smoothing, visual cue generation, and hardware tiering.

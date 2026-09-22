@@ -10,11 +10,12 @@ import {
   Trash2, 
   Sparkles, 
   Calendar,
-  Filter
+  Filter,
+  ChevronLeft
 } from 'lucide-react';
 
 export const History: React.FC = () => {
-  const { conversations, clearConversations, showToast } = useApp();
+  const { conversations, clearConversations, showToast, goBack } = useApp();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [senderFilter, setSenderFilter] = useState<'all' | 'signer' | 'speaker'>('all');
 
@@ -52,17 +53,27 @@ export const History: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300">
-              <HistoryIcon className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Conversation History</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-obsidian-800">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-xl bg-obsidian-900 hover:bg-obsidian-800 text-slate-400 hover:text-white border border-obsidian-800 transition-colors"
+            title="Go back"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300">
+                <HistoryIcon className="w-5 h-5" />
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Conversation History</h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Transcripts saved strictly on this local device in IndexedDB. Zero cloud retention.
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Transcripts saved strictly on this local device in IndexedDB. Zero cloud retention.
-          </p>
         </div>
 
         {/* Export & Clear Action Buttons */}

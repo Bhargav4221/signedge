@@ -11,11 +11,12 @@ import {
   Search, 
   Sparkles, 
   BookOpen, 
-  AlertCircle 
+  AlertCircle,
+  ChevronLeft
 } from 'lucide-react';
 
 export const SpeechToVisualCues: React.FC = () => {
-  const { showToast } = useApp();
+  const { showToast, goBack } = useApp();
   const [inputText, setInputText] = useState<string>('Could you please help me find the restroom?');
   const [isListening, setIsListening] = useState<boolean>(false);
   const [sequence, setSequence] = useState<VisualSignSequence | null>(() => 
@@ -63,18 +64,28 @@ export const SpeechToVisualCues: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300">
-              <Eye className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Speech → Visual Cues</h1>
+      {/* Header with Back Button */}
+      <div className="flex items-center justify-between pb-2 border-b border-obsidian-800">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-xl bg-obsidian-900 hover:bg-obsidian-800 text-slate-400 hover:text-white border border-obsidian-800 transition-colors"
+            title="Go back"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300">
+                <Eye className="w-5 h-5" />
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Speech → Visual Cues</h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Reverse communication: converts spoken or typed words into structured visual sign cue sequences.
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Reverse communication: converts spoken or typed words into structured visual sign cue sequences.
-          </p>
         </div>
       </div>
 

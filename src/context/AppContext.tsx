@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ConversationTurn, DeviceTier, RecognitionResult } from '../ai/types';
 import { localDB } from '../storage/db';
 import { defaultDeviceOptimizer } from '../ai/deviceOptimizer';
@@ -39,6 +39,7 @@ export interface LanguageConfig {
 interface AppContextType {
   currentScreen: ScreenId;
   navigateTo: (screen: ScreenId) => void;
+  goBack: () => void;
   isOnline: boolean;
   isSimulatedOffline: boolean;
   setSimulatedOffline: (sim: boolean) => void;
@@ -63,8 +64,24 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const VALID_SCREENS: ScreenId[] = [
+  'home', 'communication', 'sign-to-text', 'sign-to-speech',
+  'speech-to-text', 'speech-to-visual-cues', 'conversation-mode',
+  'history', 'supported-signs', 'offline-mode', 'privacy-center',
+  'accessibility-settings', 'language-settings', 'help-center', 'about'
+];
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentScreen, setCurrentScreen] = useState<ScreenId>('home');
+  // Parse initial screen from URL hash if present
+  const getInitialScreen = (): ScreenId => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.replace(/^#\/?/, '') as ScreenId;
+      if (VALID_SCREENS.includes(hash)) return hash;
+    }
+    return 'home';
+  };
+
+  const [currentScreen, setCurrentScreen] = useState<ScreenId>(getInitialScreen);
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isSimulatedOffline, setIsSimulatedOffline] = useState<boolean>(false);
   const [isSimulatedAiMode, setIsSimulatedAiMode] = useState<boolean>(false);
@@ -87,6 +104,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     speechRate: 1.0,
     speechPitch: 1.0,
   });
+
+  // Browser History & Hash Synchronization (Prevents Back button from exiting app)
+  useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash.replace(/^#\/?/, '') as ScreenId;
+      if (hash && VALID_SCREENS.includes(hash)) {
+        setCurrentScreen(hash);
+      } else {
+        setCurrentScreen('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+
+    // Ensure initial hash is set
+    if (!window.location.hash || window.location.hash === '#') {
+      window.history.replaceState({ screen: 'home' }, '', '#/home');
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
 
   // Load initial settings and history from local IndexedDB
   useEffect(() => {
@@ -124,10 +166,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
-  const navigateTo = (screen: ScreenId) => {
+  const navigateTo = useCallback((screen: ScreenId) => {
+    if (screen === currentScreen) return;
+    window.location.hash = '#/' + screen;
     setCurrentScreen(screen);
     window.scrollTo({ top: 0, behavior: accessibility.reducedMotion ? 'auto' : 'smooth' });
-  };
+  }, [currentScreen, accessibility.reducedMotion]);
+
+  const goBack = useCallback(() => {
+    if (currentScreen === 'home') return;
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigateTo('home');
+    }
+  }, [currentScreen, navigateTo]);
 
   const showToast = (message: string, type: 'info' | 'success' | 'warn' | 'error' = 'info') => {
     setToast({ message, type });
@@ -228,6 +281,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       value={{
         currentScreen,
         navigateTo,
+        goBack,
         isOnline: effectiveOnline,
         isSimulatedOffline,
         setSimulatedOffline: setIsSimulatedOffline,
@@ -251,7 +305,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }}
     >
       <div 
-        className={`min-h-screen ${accessibility.highContrast ? 'bg-black text-white' : 'bg-slate-950 text-slate-100'} ${
+        className={`min-h-screen ${
+          accessibility.highContrast 
+            ? 'bg-black text-white' 
+            : 'bg-[#090d16] text-slate-100'
+        } ${
           accessibility.fontSize === 'large' ? 'text-lg' : accessibility.fontSize === 'xlarge' ? 'text-xl' : 'text-base'
         }`}
       >

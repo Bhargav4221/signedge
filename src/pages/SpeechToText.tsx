@@ -10,11 +10,12 @@ import {
   Volume2, 
   Send, 
   Sparkles,
-  AlertCircle 
+  AlertCircle,
+  ChevronLeft 
 } from 'lucide-react';
 
 export const SpeechToText: React.FC = () => {
-  const { addTurn, showToast, accessibility } = useApp();
+  const { addTurn, showToast, accessibility, goBack } = useApp();
   const [isListening, setIsListening] = useState<boolean>(false);
   const [liveTranscript, setLiveTranscript] = useState<string>('');
   const [fullHistory, setFullHistory] = useState<string[]>([]);
@@ -82,17 +83,27 @@ export const SpeechToText: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300">
-              <Mic className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Speech → Text Captions</h1>
+      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 text-slate-300 border border-slate-700/80 transition-all active:scale-95"
+            title="Go back"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-300">
+                <Mic className="w-5 h-5" />
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Speech → Text Captions</h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              High-contrast, large-print speech captioning for deaf and hard-of-hearing users.
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            High-contrast, large-print speech captioning for deaf and hard-of-hearing users.
-          </p>
         </div>
 
         {fullHistory.length > 0 && (

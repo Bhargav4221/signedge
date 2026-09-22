@@ -11,11 +11,12 @@ import {
   Settings2, 
   Sparkles, 
   CheckCircle2,
-  VolumeX
+  VolumeX,
+  ChevronLeft
 } from 'lucide-react';
 
 export const SignToSpeech: React.FC = () => {
-  const { addTurn, language, updateLanguage, showToast } = useApp();
+  const { addTurn, language, updateLanguage, showToast, goBack } = useApp();
   const [lastSpoken, setLastSpoken] = useState<string>('');
   const [autoSpeak, setAutoSpeak] = useState<boolean>(true);
   const [isSpeakingNow, setIsSpeakingNow] = useState<boolean>(false);
@@ -65,17 +66,27 @@ export const SignToSpeech: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-blue-500/20 text-blue-300">
-              <Volume2 className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Sign → Speech Mode</h1>
+      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 text-slate-300 border border-slate-700/80 transition-all active:scale-95"
+            title="Go back"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-blue-500/20 text-blue-300">
+                <Volume2 className="w-5 h-5" />
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Sign → Speech Mode</h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Hands-free direct voice output: on-device signs speak audibly in real time.
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Hands-free direct voice output: on-device signs speak audibly in real time.
-          </p>
         </div>
 
         {/* Auto-Speak Toggle */}

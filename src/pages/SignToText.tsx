@@ -11,11 +11,12 @@ import {
   HandMetal, 
   Sparkles, 
   Send,
-  Sliders
+  Sliders,
+  ChevronLeft
 } from 'lucide-react';
 
 export const SignToText: React.FC = () => {
-  const { addTurn, showToast, accessibility } = useApp();
+  const { addTurn, showToast, accessibility, goBack } = useApp();
   const [accumulatedText, setAccumulatedText] = useState<string>('');
   const [lastRecognized, setLastRecognized] = useState<RecognitionResult | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
@@ -54,17 +55,27 @@ export const SignToText: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-300">
-              <HandMetal className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Sign → Text Mode</h1>
+      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 text-slate-300 border border-slate-700/80 transition-all active:scale-95"
+            title="Go back"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-brand-500/20 text-brand-300">
+                <HandMetal className="w-5 h-5" />
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Sign → Text Mode</h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Continuous on-device temporal sign recognition into large, clear written text.
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Continuous on-device temporal sign recognition into large, clear written text.
-          </p>
         </div>
 
         {accumulatedText && (

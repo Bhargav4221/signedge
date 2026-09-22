@@ -8,11 +8,12 @@ import {
   Sliders, 
   Check, 
   Play, 
-  Sparkles 
+  Sparkles,
+  ChevronLeft
 } from 'lucide-react';
 
 export const LanguageSettings: React.FC = () => {
-  const { language, updateLanguage, showToast } = useApp();
+  const { language, updateLanguage, showToast, goBack } = useApp();
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>('');
 
@@ -64,16 +65,28 @@ export const LanguageSettings: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="pb-2 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="p-1.5 rounded-lg bg-blue-500/20 text-blue-300">
-            <Globe className="w-5 h-5" />
-          </span>
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Language & Voice Settings</h1>
+      <div className="flex items-center justify-between pb-2 border-b border-obsidian-800">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-xl bg-obsidian-900 hover:bg-obsidian-800 text-slate-400 hover:text-white border border-obsidian-800 transition-colors"
+            title="Go back"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300">
+                <Globe className="w-5 h-5" />
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Language & Voice Settings</h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Configure sign language dialect profiles and local speech synthesis voice properties.
+            </p>
+          </div>
         </div>
-        <p className="text-xs text-slate-400 mt-1">
-          Configure sign language dialect profiles and local speech synthesis voice properties.
-        </p>
       </div>
 
       {/* Sign Language Dialect Card */}

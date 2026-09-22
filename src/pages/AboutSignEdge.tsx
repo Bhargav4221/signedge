@@ -1,4 +1,5 @@
 import React from 'react';
+import { useApp } from '../context/AppContext';
 import { 
   Sparkles, 
   ShieldCheck, 
@@ -8,12 +9,28 @@ import {
   Globe, 
   Code, 
   CheckCircle2,
-  Users
+  Users,
+  ChevronLeft
 } from 'lucide-react';
 
 export const AboutSignEdge: React.FC = () => {
+  const { goBack } = useApp();
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+      {/* Top back button */}
+      <div className="flex items-center justify-between pb-2 border-b border-obsidian-800">
+        <button
+          onClick={goBack}
+          className="p-2 rounded-xl bg-obsidian-900 hover:bg-obsidian-800 text-slate-400 hover:text-white border border-obsidian-800 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+          title="Go back"
+          aria-label="Go back"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          <span>Back</span>
+        </button>
+        <span className="text-xs text-slate-400 font-mono">SignEdge v1.0.0</span>
+      </div>
       {/* Brand Header */}
       <div className="text-center max-w-2xl mx-auto space-y-3">
         <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-cyan-400 via-brand-500 to-blue-700 flex items-center justify-center mx-auto shadow-xl shadow-brand-500/20 p-3">

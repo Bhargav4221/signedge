@@ -15,11 +15,12 @@ import {
   Trash2, 
   Sparkles,
   HandMetal,
-  UserCheck
+  UserCheck,
+  ChevronLeft
 } from 'lucide-react';
 
 export const ConversationMode: React.FC = () => {
-  const { conversations, addTurn, clearConversations, showToast } = useApp();
+  const { conversations, addTurn, clearConversations, showToast, goBack } = useApp();
   const [isFlipped, setIsFlipped] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'both' | 'signer' | 'speaker'>('both');
 
@@ -91,17 +92,27 @@ export const ConversationMode: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 space-y-6">
       {/* Header with Table-Top Rotation Button */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300">
-              <Users className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Conversation Mode</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="p-2 rounded-xl bg-obsidian-850 hover:bg-obsidian-800 text-slate-300 border border-slate-700/80 transition-all active:scale-95"
+            title="Go back"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300">
+                <Users className="w-5 h-5" />
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Conversation Mode</h1>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Face-to-face interaction mode between a sign-language user and a spoken-language user.
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Face-to-face interaction mode between a sign-language user and a spoken-language user.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">

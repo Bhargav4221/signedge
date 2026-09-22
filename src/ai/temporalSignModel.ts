@@ -10,10 +10,9 @@ import { LandmarkDetector } from './landmarkDetector';
 /**
  * Temporal Sequence Modeling for Dynamic Sign Language Recognition
  * 
- * Signs cannot be recognized from a single static video frame alone because sign language
- * semantics are defined by handshape, movement trajectory, spatial location, and temporal sequence.
- * This class implements a temporal sliding window buffer that analyzes dynamic motion vectors,
- * velocity profiles, and handshape transitions over time.
+ * Accurately classifies intentional sign gestures over a multi-frame sliding window.
+ * Requires deliberate motion trajectory and hand stability.
+ * Idle or resting hands are ignored to prevent premature false triggers.
  */
 export class TemporalSignModel {
   private windowSize: number = 24; // ~800ms at 30fps
@@ -21,7 +20,8 @@ export class TemporalSignModel {
   private landmarkDetector: LandmarkDetector;
   private lastRecognizedSignId: string | null = null;
   private stableDetectionCount: number = 0;
-  private readonly stabilityThreshold: number = 3; // Consecutive matches required for trigger
+  private readonly stabilityThreshold: number = 4; // Consecutive matches required for trigger
+  private minMotionThreshold: number = 0.025; // Minimum spatial displacement to avoid idle triggers
 
   constructor(detector: LandmarkDetector, windowSize = 24) {
     this.landmarkDetector = detector;
@@ -43,10 +43,8 @@ export class TemporalSignModel {
    */
   public pushFrame(landmarks: FrameLandmarks): RecognitionResult | null {
     if (!landmarks.handDetected || (!landmarks.rightHand && !landmarks.leftHand)) {
-      // Clear or degrade buffer if no hands detected
-      if (this.frameBuffer.length > 0) {
-        this.frameBuffer.shift();
-      }
+      // Clear buffer immediately when hand leaves the camera frame
+      this.clearBuffer();
       return null;
     }
 
@@ -59,7 +57,6 @@ export class TemporalSignModel {
     let twoHandedDistance = undefined;
     if (landmarks.rightHand && landmarks.leftHand) {
       secondaryFeatures = this.landmarkDetector.extractFeatures(landmarks.leftHand);
-      // Distance between wrists
       twoHandedDistance = Math.hypot(
         landmarks.rightHand[0].x - landmarks.leftHand[0].x,
         landmarks.rightHand[0].y - landmarks.leftHand[0].y
@@ -82,8 +79,8 @@ export class TemporalSignModel {
       this.frameBuffer.shift();
     }
 
-    // Need at least half buffer to evaluate trajectory
-    if (this.frameBuffer.length < Math.floor(this.windowSize / 2)) {
+    // Need at least 8 frames to evaluate trajectory
+    if (this.frameBuffer.length < 8) {
       return null;
     }
 
@@ -96,7 +93,7 @@ export class TemporalSignModel {
    */
   public evaluateTemporalSequence(): RecognitionResult | null {
     const n = this.frameBuffer.length;
-    if (n < 6) return null;
+    if (n < 8) return null;
 
     const firstFrame = this.frameBuffer[0];
     const lastFrame = this.frameBuffer[n - 1];
@@ -111,7 +108,7 @@ export class TemporalSignModel {
     const deltaY = lastHand[0].y - firstHand[0].y;
     const durationMs = lastFrame.timestamp - firstFrame.timestamp || 1;
 
-    // Average velocity
+    // Displacement
     const totalDistance = Math.hypot(deltaX, deltaY);
     const avgVelocity = totalDistance / (durationMs / 1000); // units per second
 
@@ -138,7 +135,13 @@ export class TemporalSignModel {
 
     const isOscillating = directionChangesX >= 2;
 
-    // Score all candidate signs in vocabulary
+    // Guard: If hand is idle/stationary without oscillation, do NOT trigger false signs
+    if (totalDistance < this.minMotionThreshold && !isOscillating) {
+      this.stableDetectionCount = 0;
+      return null;
+    }
+
+    // Score candidate signs in vocabulary
     let bestSign: SignDefinition | null = null;
     let highestConfidence = 0.0;
 
@@ -148,6 +151,7 @@ export class TemporalSignModel {
         deltaX,
         deltaY,
         avgVelocity,
+        totalDistance,
         isOscillating,
         twoHandedPresent: Boolean(lastFrame.landmarks.rightHand && lastFrame.landmarks.leftHand),
         wristY: lastHand[0].y
@@ -196,6 +200,7 @@ export class TemporalSignModel {
       deltaX: number;
       deltaY: number;
       avgVelocity: number;
+      totalDistance: number;
       isOscillating: boolean;
       twoHandedPresent: boolean;
       wristY: number;
@@ -204,42 +209,46 @@ export class TemporalSignModel {
     let score = 0;
     const targetFingers = sign.featurePattern.fingerSignature;
 
-    // 1. Finger Extension Matching (Weight: 40%)
+    // 1. Finger Extension Matching (Weight: 45%)
     let fingerMatchCount = 0;
     for (let i = 0; i < 5; i++) {
       if (observed.fingerExtensions[i] === targetFingers[i]) {
         fingerMatchCount++;
       }
     }
-    const fingerScore = (fingerMatchCount / 5) * 0.40;
+    const fingerScore = (fingerMatchCount / 5) * 0.45;
     score += fingerScore;
 
-    // 2. Motion Dynamic Matching (Weight: 35%)
+    // 2. Motion Dynamic Matching (Weight: 40%)
     let motionScore = 0;
     switch (sign.featurePattern.motionType) {
       case 'oscillating':
-        motionScore = observed.isOscillating ? 0.35 : 0.05;
+        motionScore = observed.isOscillating ? 0.40 : 0.0;
         break;
       case 'linear':
         if (sign.featurePattern.targetDirection === 'up' && observed.deltaY < -0.04) {
-          motionScore = 0.35;
+          motionScore = 0.40;
         } else if (sign.featurePattern.targetDirection === 'down' && observed.deltaY > 0.04) {
+          motionScore = 0.40;
+        } else if (sign.featurePattern.targetDirection === 'forward' && observed.totalDistance > 0.03) {
           motionScore = 0.35;
-        } else if (sign.featurePattern.targetDirection === 'forward' && Math.hypot(observed.deltaX, observed.deltaY) > 0.02) {
-          motionScore = 0.30;
+        } else {
+          motionScore = 0.05;
+        }
+        break;
+      case 'contact':
+        // Distinct deceleration after motion
+        if (observed.totalDistance > 0.02 && observed.avgVelocity < 0.6) {
+          motionScore = 0.40;
         } else {
           motionScore = 0.15;
         }
         break;
-      case 'contact':
-        // Sudden decrease in velocity or terminal hold
-        motionScore = observed.avgVelocity < 0.8 ? 0.35 : 0.20;
-        break;
       case 'two-handed-open':
-        motionScore = observed.twoHandedPresent ? 0.35 : 0.10;
+        motionScore = observed.twoHandedPresent && observed.totalDistance > 0.025 ? 0.40 : 0.05;
         break;
       case 'static':
-        motionScore = Math.hypot(observed.deltaX, observed.deltaY) < 0.03 ? 0.35 : 0.10;
+        motionScore = observed.totalDistance < 0.03 ? 0.25 : 0.05;
         break;
     }
     score += motionScore;
@@ -248,11 +257,8 @@ export class TemporalSignModel {
     if (sign.twoHanded) {
       score += observed.twoHandedPresent ? 0.15 : 0.0;
     } else {
-      score += 0.15; // single handed does not penalize
+      score += 0.15;
     }
-
-    // 4. Base confidence floor (10%)
-    score += 0.10;
 
     return Math.min(0.99, score);
   }
