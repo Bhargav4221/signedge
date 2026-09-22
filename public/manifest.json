@@ -1,0 +1,17 @@
+{
+  "short_name": "SignEdge",
+  "name": "SignEdge — Communication without barriers",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#05070c",
+  "theme_color": "#074ee0",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["accessibility", "communication", "utilities"]
+}
